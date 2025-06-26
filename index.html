@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お絵描き｜HARUOMILABO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        canvas {
+            border: 2px solid #1f2937;
+            background-color: #fff;
+        }
+        #lineWidthPreview {
+            border-radius: 50%;
+            background-color: #000;
+            display: inline-block;
+        }
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #loadingImage {
+            width: 200px;
+            margin-bottom: 20px;
+            transform: translateY(-50px);
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1f2937;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
+    <div id="loadingScreen">
+        <img id="loadingImage" src="https://cdn.amebaowndme.com/madrid-prd/madrid-web/images/sites/2762588/e7851e8946cadf512f72fbc39b42a2b9_435105c3d90c180a1a4e0ccd0374f175.png?width=800" alt="Loading Image">
+        <div class="spinner"></div>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-800 mb-4">お絵描き｜HARUOMILABO</h1>
+    <div class="controls bg-white p-4 rounded-lg shadow-md flex flex-wrap gap-4 items-center">
+        <div class="flex items-center gap-2">
+            <label for="color" class="text-gray-700">色:</label>
+            <input type="color" id="color" value="#000000" class="h-8 w-8">
+        </div>
+        <div class="flex flex-col items-center">
+            <label for="lineWidth" class="text-gray-700">線の太さ:</label>
+            <input type="range" id="lineWidth" min="1" max="20" value="5" class="w-32">
+            <div id="lineWidthPreview" class="mt-2"></div>
+        </div>
+        <button onclick="clearCanvas()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">クリア</button>
+        <button onclick="toggleFillTool()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            塗りつぶし: <span id="fillStatus">オフ</span>
+        </button>
+        <button onclick="toggleEraser()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+            消しゴム: <span id="eraserStatus">オフ</span>
+        </button>
+        <button onclick="downloadCanvas()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">ダウンロード</button>
+    </div>
+    <canvas id="canvas" width="800" height="600" class="mt-4 rounded-lg shadow-md"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const lineWidthInput = document.getElementById('lineWidth');
+        const lineWidthPreview = document.getElementById('lineWidthPreview');
+        let drawing = false;
+        let isEraser = false;
+        let isFillTool = false;
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+            }, 1000);
+        });
+
+        function updateLineWidthPreview() {
+            const size = lineWidthInput.value;
+            lineWidthPreview.style.width = `${size}px`;
+            lineWidthPreview.style.height = `${size}px`;
+            lineWidthPreview.style.backgroundColor = isEraser ? '#ffffff' : document.getElementById('color').value;
+        }
+
+        lineWidthInput.addEventListener('input', updateLineWidthPreview);
+        document.getElementById('color').addEventListener('input', updateLineWidthPreview);
+        updateLineWidthPreview();
+
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        function handleMouseDown(e) {
+            if (isFillTool) {
+                floodFill(e.offsetX, e.offsetY, hexToRgb(document.getElementById('color').value));
+            } else {
+                drawing = true;
+                draw(e);
+            }
+        }
+
+        function stopDrawing() {
+            drawing = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!drawing || isFillTool) return;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = isEraser ? '#ffffff' : document.getElementById('color').value;
+            ctx.lineWidth = lineWidthInput.value;
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function toggleFillTool() {
+            isFillTool = !isFillTool;
+            document.getElementById('fillStatus').textContent = isFillTool ? 'オン' : 'オフ';
+            if (isFillTool && isEraser) {
+                toggleEraser(); // Disable eraser if fill tool is activated
+            }
+        }
+
+        function toggleEraser() {
+            isEraser = !isEraser;
+            document.getElementById('eraserStatus').textContent = isEraser ? 'オン' : 'オフ';
+            if (isEraser && isFillTool) {
+                toggleFillTool(); // Disable fill tool if eraser is activated
+            }
+            updateLineWidthPreview();
+        }
+
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = 'お絵描き｜HARUOMILABO.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return [r, g, b, 255];
+        }
+
+        function floodFill(x, y, fillColor) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const targetColor = getPixelColor(data, x, y, canvas.width);
+            if (colorsMatch(targetColor, fillColor)) return;
+
+            const stack = [[Math.floor(x), Math.floor(y)]];
+            while (stack.length) {
+                const [px, py] = stack.pop();
+                if (px < 0 || px >= canvas.width || py < 0 || py >= canvas.height) continue;
+                const currentColor = getPixelColor(data, px, py, canvas.width);
+                if (!colorsMatch(currentColor, targetColor)) continue;
+
+                setPixelColor(data, px, py, canvas.width, fillColor);
+
+                stack.push([px + 1, py]);
+                stack.push([px - 1, py]);
+                stack.push([px, py + 1]);
+                stack.push([px, py - 1]);
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function getPixelColor(data, x, y, width) {
+            const index = (y * width + x) * 4;
+            return [data[index], data[index + 1], data[index + 2], data[index + 3]];
+        }
+
+        function setPixelColor(data, x, y, width, color) {
+            const index = (y * width + x) * 4;
+            data[index] = color[0];
+            data[index + 1] = color[1];
+            data[index + 2] = color[2];
+            data[index + 3] = color[3];
+        }
+
+        function colorsMatch(color1, color2) {
+            return color1[0] === color2[0] && color1[1] === color2[1] && 
+                   color1[2] === color2[2] && color1[3] === color2[3];
+        }
+    </script>
+</body>
+</html>
