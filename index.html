@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta name="google-site-verification" content="U1sIXwZTqGb45xN2EOftlFDi8dFOVGOOKNJqAnXOdUQ" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>お絵描き｜HARUOMILABO</title>
@@ -34,7 +33,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #f5f5f5; /* Light base for better brush visibility */
+            background-color: #f5f5f5;
         }
         #loadingImage {
             width: 200px;
@@ -65,8 +64,8 @@
         <img id="loadingImage" src="https://cdn.amebaowndme.com/madrid-prd/madrid-web/images/sites/2762588/e7851e8946cadf512f72fbc39b42a2b9_435105c3d90c180a1a4e0ccd0374f175.png?width=800" alt="Loading Image">
         <div class="spinner"></div>
     </div>
-    <h1 class="text-3xl font-bold text-gray-800 mb-4">お絵描き｜HARUOMILABO</h1>
-    <p>~絵を描くのに必要なものを最低限詰め込んだサイト~</p>
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">お絵描き｜HARUOMILABO</h1>
+    <p class="text-gray-600 mb-4">~絵を描くのに必要なものを最低限詰め込んだサイト~</p>
     <div class="controls bg-white p-4 rounded-lg shadow-md flex flex-wrap gap-4 items-center">
         <div class="flex items-center gap-2 border border-gray-700 p-2 rounded">
             <label for="color" class="text-gray-700">描画色:</label>
@@ -304,10 +303,13 @@
         }
 
         function downloadCanvas() {
-            const link = document.createElement('a');
-            link.download = 'お絵描き｜HARUOMILABO.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+            const fileName = prompt('ダウンロードするファイルの名前を入力してください:', 'お絵描き｜HARUOMILABO');
+            if (fileName) {
+                const link = document.createElement('a');
+                link.download = `${fileName}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
         }
 
         function hexToRgb(hex) {
