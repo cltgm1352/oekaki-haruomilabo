@@ -63,6 +63,8 @@
             <input type="range" id="lineWidth" min="1" max="20" value="5" class="w-32">
             <div id="lineWidthPreview" class="mt-2"></div>
         </div>
+        <button onclick="undo()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600" title="戻る">↶</button>
+        <button onclick="redo()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600" title="進む">↷</button>
         <button onclick="clearCanvas()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">クリア</button>
         <button onclick="toggleFillTool()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             塗りつぶし: <span id="fillStatus">オフ</span>
@@ -84,11 +86,14 @@
         let isFillTool = false;
         let isKey1Pressed = false;
         let isKey0Pressed = false;
+        let history = [];
+        let historyIndex = -1;
 
         // Set initial background color to white
         canvas.style.backgroundColor = '#ffffff';
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        saveState();
 
         window.addEventListener('load', () => {
             setTimeout(() => {
@@ -100,13 +105,36 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === '1') isKey1Pressed = true;
             if (e.key === '0') isKey0Pressed = true;
-            if (isKey1Pressed && isKey0Pressed) applyGradientBackground();
+            if (isKey1Pressed && isKey0Pressed) {
+                applyGradientBackground();
+                saveState();
+            }
         });
 
         document.addEventListener('keyup', (e) => {
             if (e.key === '1') isKey1Pressed = false;
             if (e.key === '0') isKey0Pressed = false;
         });
+
+        function saveState() {
+            history = history.slice(0, historyIndex + 1);
+            history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            historyIndex++;
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                ctx.putImageData(history[historyIndex], 0, 0);
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                ctx.putImageData(history[historyIndex], 0, 0);
+            }
+        }
 
         function updateLineWidthPreview() {
             const size = lineWidthInput.value;
@@ -117,9 +145,9 @@
 
         function applyGradientBackground() {
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#a1c4fd'); // Soft blue
-            gradient.addColorStop(0.5, '#c2e9fb'); // Light cyan
-            gradient.addColorStop(1, '#d4fc79'); // Soft green
+            gradient.addColorStop(0, '#a1c4fd');
+            gradient.addColorStop(0.5, '#c2e9fb');
+            gradient.addColorStop(1, '#d4fc79');
             canvas.style.backgroundColor = 'transparent';
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -137,6 +165,7 @@
         function handleMouseDown(e) {
             if (isFillTool) {
                 floodFill(e.offsetX, e.offsetY, hexToRgb(document.getElementById('color').value));
+                saveState();
             } else {
                 drawing = true;
                 draw(e);
@@ -144,8 +173,11 @@
         }
 
         function stopDrawing() {
-            drawing = false;
-            ctx.beginPath();
+            if (drawing) {
+                drawing = false;
+                ctx.beginPath();
+                saveState();
+            }
         }
 
         function draw(e) {
@@ -164,6 +196,7 @@
             canvas.style.backgroundColor = '#ffffff';
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState();
         }
 
         function toggleFillTool() {
