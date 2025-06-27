@@ -101,6 +101,7 @@
         let isFillTool = false;
         let isKey1Pressed = false;
         let isKey0Pressed = false;
+        let isLoadingPersistent = false;
         let history = [];
         let historyIndex = -1;
 
@@ -181,14 +182,18 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         saveState();
 
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('loadingScreen').style.display = 'none';
-            }, 1000);
-        });
-
-        // Handle keydown for gradient background
+        // Toggle loading screen persistence with F12
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'F12') {
+                e.preventDefault(); // Prevent default browser behavior (e.g., opening dev tools)
+                isLoadingPersistent = !isLoadingPersistent;
+                const loadingScreen = document.getElementById('loadingScreen');
+                if (!isLoadingPersistent) {
+                    loadingScreen.style.display = 'none';
+                } else {
+                    loadingScreen.style.display = 'flex';
+                }
+            }
             if (e.key === '1') isKey1Pressed = true;
             if (e.key === '0') isKey0Pressed = true;
             if (isKey1Pressed && isKey0Pressed) {
@@ -200,6 +205,14 @@
         document.addEventListener('keyup', (e) => {
             if (e.key === '1') isKey1Pressed = false;
             if (e.key === '0') isKey0Pressed = false;
+        });
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!isLoadingPersistent) {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                }
+            }, 1000);
         });
 
         // Gradient background options
@@ -240,24 +253,6 @@
             { type: 'radial', cx: canvas.width/2, cy: canvas.height/2, r: canvas.width/2, stops: [[0, '#ff00ff'], [1, '#00ff7f']] },
             { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: canvas.height, stops: [[0, '#4682b4'], [0.5, '#f5f5dc'], [1, '#ff4500']] },
             { type: 'linear', x1: 0, y1: canvas.height, x2: canvas.width, y2: 0, stops: [[0, '#ffdead'], [1, '#6b8e23']] },
-            { type: 'radial', cx: canvas.width/3, cy: canvas.height/3, r: canvas.width, stops: [[0, '#ff69b4'], [1, '#2f4f4f']] },
-            { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: 0, stops: [[0, '#48d1cc'], [1, '#c71585']] },
-            { type: 'linear', x1: 0, y1: 0, x2: 0, y2: canvas.height, stops: [[0, '#9acd32'], [1, '#ff4500']] },
-            { type: 'radial', cx: canvas.width/2, cy: canvas.height/2, r: canvas.width/1.5, stops: [[0, '#00ff7f'], [1, '#dc143c']] },
-            { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: canvas.height, stops: [[0, '#ff6347'], [0.5, '#98fb98'], [1, '#4682b4']] },
-            { type: 'linear', x1: 0, y1: canvas.height, x2: canvas.width, y2: 0, stops: [[0, '#ff8c00'], [1, '#4b0082']] },
-            { type: 'radial', cx: canvas.width/4, cy: canvas.height/4, r: canvas.width/2, stops: [[0, '#ffa500'], [1, '#6a5acd']] },
-            { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: 0, stops: [[0, '#20b2aa'], [1, '#ff00ff']] },
-            { type: 'linear', x1: 0, y1: 0, x2: 0, y2: canvas.height, stops: [[0, '#b8860b'], [1, '#00ced1']] },
-            { type: 'radial', cx: canvas.width/2, cy: canvas.height/2, r: canvas.width, stops: [[0, '#ff4500'], [1, '#1e90ff']] },
-            { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: canvas.height, stops: [[0, '#32cd32'], [0.5, '#f0e68c'], [1, '#ff69b4']] },
-            { type: 'linear', x1: 0, y1: canvas.height, x2: canvas.width, y2: 0, stops: [[0, '#dda0dd'], [1, '#ff6347']] },
-            { type: 'radial', cx: canvas.width/3, cy: canvas.height/3, r: canvas.width/1.5, stops: [[0, '#00b7eb'], [1, '#9932cc']] },
-            { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: 0, stops: [[0, '#7fffd4'], [1, '#dc143c']] },
-            { type: 'linear', x1: 0, y1: 0, x2: 0, y2: canvas.height, stops: [[0, '#ff8c00'], [1, '#4169e1']] },
-            { type: 'radial', cx: canvas.width/2, cy: canvas.height/2, r: canvas.width/2, stops: [[0, '#ff00ff'], [1, '#00ff7f']] },
-            { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: canvas.height, stops: [[0, '#4682b4'], [0.5, '#f5f5dc'], [1, '#ff4500']] },
-            { type: 'linear', x1: 0, y1: canvas.height, x2: canvas.width, y2: 0, stops: [[0, '#ffdead'], [1, '#6b8e23']] },
             { type: 'radial', cx: canvas.width/4, cy: canvas.height/4, r: canvas.width, stops: [[0, '#ff69b4'], [1, '#2f4f4f']] },
             { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: 0, stops: [[0, '#48d1cc'], [1, '#c71585']] },
             { type: 'linear', x1: 0, y1: 0, x2: 0, y2: canvas.height, stops: [[0, '#9acd32'], [1, '#ff4500']] },
@@ -276,19 +271,19 @@
             { type: 'radial', cx: canvas.width/2, cy: canvas.height/2, r: canvas.width/2, stops: [[0, '#ff00ff'], [1, '#00ff7f']] },
             { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: canvas.height, stops: [[0, '#4682b4'], [0.5, '#f5f5dc'], [1, '#ff4500']] },
             { type: 'linear', x1: 0, y1: canvas.height, x2: canvas.width, y2: 0, stops: [[0, '#ffdead'], [1, '#6b8e23']] },
-            { type: 'radial', cx: canvas.width/3, cy: canvas.height/3, r: canvas.width, stops: [[0, '#ff69b4'], [1, '#2f4f4f']] },
+            { type: 'radial', cx: canvas.width/4, cy: canvas.height/4, r: canvas.width, stops: [[0, '#ff69b4'], [1, '#2f4f4f']] },
             { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: 0, stops: [[0, '#48d1cc'], [1, '#c71585']] },
             { type: 'linear', x1: 0, y1: 0, x2: 0, y2: canvas.height, stops: [[0, '#9acd32'], [1, '#ff4500']] },
             { type: 'radial', cx: canvas.width/2, cy: canvas.height/2, r: canvas.width/1.5, stops: [[0, '#00ff7f'], [1, '#dc143c']] },
             { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: canvas.height, stops: [[0, '#ff6347'], [0.5, '#98fb98'], [1, '#4682b4']] },
             { type: 'linear', x1: 0, y1: canvas.height, x2: canvas.width, y2: 0, stops: [[0, '#ff8c00'], [1, '#4b0082']] },
-            { type: 'radial', cx: canvas.width/4, cy: canvas.height/4, r: canvas.width/2, stops: [[0, '#ffa500'], [1, '#6a5acd']] },
+            { type: 'radial', cx: canvas.width/3, cy: canvas.height/3, r: canvas.width/2, stops: [[0, '#ffa500'], [1, '#6a5acd']] },
             { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: 0, stops: [[0, '#20b2aa'], [1, '#ff00ff']] },
             { type: 'linear', x1: 0, y1: 0, x2: 0, y2: canvas.height, stops: [[0, '#b8860b'], [1, '#00ced1']] },
             { type: 'radial', cx: canvas.width/2, cy: canvas.height/2, r: canvas.width, stops: [[0, '#ff4500'], [1, '#1e90ff']] },
             { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: canvas.height, stops: [[0, '#32cd32'], [0.5, '#f0e68c'], [1, '#ff69b4']] },
             { type: 'linear', x1: 0, y1: canvas.height, x2: canvas.width, y2: 0, stops: [[0, '#dda0dd'], [1, '#ff6347']] },
-            { type: 'radial', cx: canvas.width/3, cy: canvas.height/3, r: canvas.width/1.5, stops: [[0, '#00b7eb'], [1, '#9932cc']] },
+            { type: 'radial', cx: canvas.width/4, cy: canvas.height/4, r: canvas.width/1.5, stops: [[0, '#00b7eb'], [1, '#9932cc']] },
             { type: 'linear', x1: 0, y1: 0, x2: canvas.width, y2: 0, stops: [[0, '#7fffd4'], [1, '#dc143c']] },
             { type: 'linear', x1: 0, y1: 0, x2: 0, y2: canvas.height, stops: [[0, '#ff8c00'], [1, '#4169e1']] },
             { type: 'radial', cx: canvas.width/2, cy: canvas.height/2, r: canvas.width/2, stops: [[0, '#ff00ff'], [1, '#00ff7f']] },
